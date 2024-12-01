@@ -8,6 +8,11 @@ struct spinlock;
 struct sleeplock;
 struct stat;
 struct superblock;
+typedef struct message {
+    int sender_pid;
+    char content[128];
+} message;
+
 
 // bio.c
 void            binit(void);

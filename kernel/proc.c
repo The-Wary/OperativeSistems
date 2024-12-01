@@ -693,3 +693,42 @@ procdump(void)
     printf("\n");
   }
 }
+
+int send(char *msg_content) {
+    acquire(&msg_queue.lock);
+
+    if (msg_queue.count == MSG_QUEUE_SIZE) {
+        release(&msg_queue.lock);
+        return -1; // Queue is full
+    }
+
+    message msg;
+    msg.sender_pid = myproc()->pid; // Get the sender's PID
+    safestrcpy(msg.content, msg_content, sizeof(msg.content));
+
+    msg_queue.messages[msg_queue.tail] = msg;
+    msg_queue.tail = (msg_queue.tail + 1) % MSG_QUEUE_SIZE;
+    msg_queue.count++;
+
+    wakeup(&msg_queue); // Wake up any process waiting to receive
+    release(&msg_queue.lock);
+    return 0;
+}
+
+
+int receive(char *buffer) {
+    acquire(&msg_queue.lock);
+
+    while (msg_queue.count == 0) {
+        sleep(&msg_queue, &msg_queue.lock); // Sleep until a message is available
+    }
+
+    message msg = msg_queue.messages[msg_queue.head];
+    msg_queue.head = (msg_queue.head + 1) % MSG_QUEUE_SIZE;
+    msg_queue.count--;
+
+    safestrcpy(buffer, msg.content, sizeof(msg.content));
+    release(&msg_queue.lock);
+
+    return msg.sender_pid; // Return the sender's PID
+}

@@ -91,3 +91,17 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+unint64 sys_send(void) {
+    char *msg_content;
+    if (argstr(0, &msg_content) < 0)
+        return -1;
+    return send(msg_content);
+}
+
+unint64 sys_receive(void) {
+    char *buffer;
+    if (argstr(0, &buffer) < 0)
+        return -1;
+    return receive(buffer);
+}
